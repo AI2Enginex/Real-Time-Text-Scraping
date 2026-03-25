@@ -1,7 +1,15 @@
 from MongoDBManager.pymongo_conn import MongoDBManagerClass
 import ScrapeData.scraping_data as nts
+import os 
+
+from dotenv import load_dotenv
+
+# Load variables from .env
+load_dotenv()
 
 
+database = os.getenv("DATABASE")
+hyperlinks_collection = os.getenv("HYPERLINK_COLLECTION")
 # Creating a driver class to handle the execuetion of the code
 # this class execuets the process of scraping and storing the 
 # Hyperlinks data
@@ -10,8 +18,7 @@ class ScrapeHyperLinkaClass:
     def __init__(self, link: str):
 
         self.link = link
-        
-    
+
     # scraping the links
     def scrapelinks(self, v2: str, v3: str, ref: str):
 
@@ -56,6 +63,6 @@ if __name__ == '__main__':
     data = scr_news.clean_dataframe(val_v2='fleft', val_v3='a', val_ref='href')
 
     print(data)
-    database_var = MongoDBManagerClass(db_name='Vibhor', collection_name='links')
+    database_var = MongoDBManagerClass(db_name=database, collection_name=hyperlinks_collection)
     database_var.insert_data_in_collection(data=data)
     
