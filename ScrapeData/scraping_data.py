@@ -1,5 +1,5 @@
 import pandas as pd
-import time
+
 import os
 from WebScraper.scraper import WebScraping, ExtractText
 from MongoDBManager.pymongo_conn import MongoDBManagerClass
@@ -11,10 +11,10 @@ load_dotenv()
 
 database = os.getenv("DATABASE")
 collection_name = os.getenv("HYPERLINK_COLLECTION")
+logger_collection=os.getenv("SCRAPED_LINKS")
 
-print(database)
-print(collection_name)
 
+# Class for Storing the HyperLinks as DataFrame
 class GetDataFrame(WebScraping):
 
     def __init__(self,link: str,val2: str,val3: str,ref: str):
@@ -41,14 +41,14 @@ class GetDataFrame(WebScraping):
         except Exception as e:
             return e
 
-
+# Class for reading the HyperLinks from the MongoDB's Collection
 class ReadHyperlinCollection:
 
     def __init__(self):
 
         self.database_var = MongoDBManagerClass(db_name=database, collection_name=collection_name)
 
-        self.df = self.database_var.read_collection_as_df()
+        self.df = self.database_var.read_collection_as_df()   # reading collection as dataframe
 
 
 # creating the class
@@ -119,6 +119,13 @@ class CreateDocuments:
                 
                 # class to extract text
                 ex = ExtractText(link=self.data[i])
+                
+                # storing all the links that are visited into a MongoDB's Document this process helps
+                # to  avoid Scraping the link again if there's a failure while extracting the text
+                db_var = MongoDBManagerClass(db_name=database,collection_name=logger_collection)
+                db_var.insert_data_in_collection(data=[{"link_visited": self.data[i]}])
+
+
                 title_list = ex.news_title(title_val,tag_val)
                 date,text=ex.get_text(value4=val4,value=val,value2=val2,value3=val3)
 

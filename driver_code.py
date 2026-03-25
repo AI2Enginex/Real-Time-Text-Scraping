@@ -10,6 +10,7 @@ load_dotenv()
 
 database = os.getenv("DATABASE")
 collection_name = os.getenv("NEWS_COLLECTION")
+logger_collection=os.getenv("SCRAPED_LINKS")
 
 print(database)
 print(collection_name)
@@ -37,56 +38,89 @@ class DriverClass:
         except Exception as e:
                 return e
 
-if __name__ == '__main__':
 
-    def main(scrape=False):
-        if scrape:
-            print("Starting scraping process...")
-            database_var = MongoDBManagerClass(db_name=database, collection_name=collection_name)
-            total_length = database_var.check_collection_length()
-
-            print('Total length: ', total_length)
-
-            start = total_length
-            end = start + 2
-
-            print(f'Start at {start} and end till {end}')
-
-            scr_news = DriverClass()
-
-            coll = scr_news.insert_to_db(
-                feature_name='link',
-                valst=['/news/business/stock', '/news/business'],
-                endcon=True,
-                start=start,
-                end=end,
-                titleval='page_left_wrapper',
-                tagval='h1',
-                val4='article_schedule',
-                val='clearfix',
-                val2='content_wrapper',
-                val3='p'
-            )
-            
-            # print(coll)
-            print('Appending values...')
-
-            time.sleep(1)
-            database_var.insert_data_in_collection(data=coll)
-            database_var.close_conn()
-            time.sleep(1)
+# Execution class
+class NewsScraperApp:
 
 
-    def driver_func():
-       
+    def __init__(self, db_name, logger_collection, news_collection):
+        self.db_name = db_name
+        self.logger_collection = logger_collection
+        self.news_collection = news_collection
+
+        # DB handlers
+        self.logger_db = MongoDBManagerClass(
+            db_name=self.db_name,
+            collection_name=self.logger_collection
+        )
+
+        self.news_db = MongoDBManagerClass(
+            db_name=self.db_name,
+            collection_name=self.news_collection
+        )
+
+        # Driver
+        self.driver = DriverClass()
+
+    def get_scrape_range(self, batch_size=2):
+        total_length = self.logger_db.check_collection_length()
+        print('Total length:', total_length)
+
+        start = total_length
+        end = start + batch_size
+
+        print(f'Start at {start} and end till {end}')
+        return start, end
+
+    def scrape_news(self, start: int, end: int):
+        print("Starting scraping process...")
+
+        data = self.driver.insert_to_db(
+            feature_name='link',
+            valst=['/news/business/stock', '/news/business'],
+            endcon=True,
+            start=start,
+            end=end,
+            titleval='page_left_wrapper',
+            tagval='h1',
+            val4='article_schedule',
+            val='clearfix',
+            val2='content_wrapper',
+            val3='p'
+        )
+
+        return data
+
+    def save_news(self, data: list):
+        print('Appending values...')
+        time.sleep(1)
+
+        self.news_db.insert_data_in_collection(data=data)
+        self.news_db.close_conn()
+
+        time.sleep(1)
+
+    def run(self, scrape=False):
+        if not scrape:
+            print("Scraping flag is disabled.")
+            return
+
         try:
-            main(scrape=True)
+            start, end = self.get_scrape_range()
+            scraped_data = self.scrape_news(start, end)
+            self.save_news(scraped_data)
+
         except Exception as e:
+            print("Error occurred:", e)
             return e
-      
 
-    
-    driver_func()
 
-    
+# Entry point
+if __name__ == "__main__":
+    app = NewsScraperApp(
+        db_name=database,
+        logger_collection=logger_collection,
+        news_collection=collection_name
+    )
 
+    app.run(scrape=True)

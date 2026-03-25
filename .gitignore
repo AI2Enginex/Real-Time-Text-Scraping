@@ -2,3 +2,4 @@ MongoDBManager/__pycache__/
 ScrapeData/__pycache__/
 WebScraper/__pycache__/
 .env
+__pycache__
