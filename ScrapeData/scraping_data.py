@@ -105,7 +105,7 @@ class CreateDocuments:
 
     # function for creating a list of dictionaries
     # which will be inserted later as a document in the mongodb'c collection
-    def get_documents(self,start: str,end: str,title_val: str,tag_val: str,val4: str,val: str,val2: str,val3: str):
+    def get_documents(self,start: str,end: str,title_val: str,tag_val: str,val4: str,val: str,val2: str,val3: str, button_val: str):
         
         try:
             
@@ -127,7 +127,7 @@ class CreateDocuments:
 
 
                 title_list = ex.news_title(title_val,tag_val)
-                date,text=ex.get_text(value4=val4,value=val,value2=val2,value3=val3)
+                date,text=ex.get_text(value4=val4,value=val,value2=val2,value3=val3, button=button_val)
 
                 # formatting the title, date and time and the text
                 # to be inserted in the mongodb's collection

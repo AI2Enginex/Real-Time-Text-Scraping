@@ -3,6 +3,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
+
 '''Web Scraping using Selenium python we will use Google Chrome web browser for scraping the text from the website'''
 
 # creating a class to scrape
@@ -44,11 +49,6 @@ class WebScraping:
         except:
             self.releasedriver()
 
-# class for creating a Dataframe
-# to store the links
-# these links will be used
-# later to extract the text
-
 
 # creating a class
 # to extract data
@@ -60,6 +60,24 @@ class ExtractText:
         # declearing the driver variable
         self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager("138.0.7204.184").install()))
         self.driver.get(link)
+
+    
+    def click_read_more(self,button_value: str):
+        try:
+            read_more = WebDriverWait(self.driver, 5).until(
+                EC.element_to_be_clickable((By.XPATH, f"//button[contains(text(),{button_value})]"))
+            )
+            
+            # Scroll into view (important for reliability)
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", read_more)
+            
+            # Click using JS (more stable than normal click)
+            self.driver.execute_script("arguments[0].click();", read_more)
+
+            return True  # clicked successfully
+
+        except:
+            return False  # button not found or not clickable
 
     def releasedriver(self):
 
@@ -76,13 +94,20 @@ class ExtractText:
     
     # extracting news date and time
     # with the main content
-    def get_text(self,value: str,value2: str,value3: str,value4: str):
+    def get_text(self,value: str,value2: str,value3: str,value4: str, button: str):
 
         try:
-            search = self.driver.find_elements(By.CLASS_NAME,value=value)
-            return [ele.text for data in search for ele in data.find_elements(By.CLASS_NAME,value4) if len(ele.text) > 0], [datatext.text for data in search for data_ in 
-                    data.find_elements(By.CLASS_NAME,value=value2) 
-                    for datatext in data_.find_elements(By.TAG_NAME , value=value3)] 
+            self.click_read_more(button_value=button)
+
+            search = self.driver.find_elements(By.CLASS_NAME, value=value)
+
+            return [ele.get_attribute("textContent").strip() for data in search for ele in data.find_elements(By.CLASS_NAME, value4)
+                if ele.get_attribute("textContent") and ele.get_attribute("textContent").strip()
+            ], [datatext.get_attribute("textContent").strip() for data in search for data_ in data.find_elements(By.CLASS_NAME, value=value2)
+                for datatext in data_.find_elements(By.TAG_NAME, value=value3)
+                if datatext.get_attribute("textContent") and datatext.get_attribute("textContent").strip()
+            ]
+
         except:
             self.driver.quit()
 

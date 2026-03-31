@@ -25,14 +25,14 @@ class DriverClass:
         pass
     
     # inserting the scraped data into MongoDB's collection
-    def insert_to_db(self, feature_name: str, valst: list, start: str, end: str, val: str, val2: str, val3: str, val4: str, titleval: str, tagval: str, endcon: str):
+    def insert_to_db(self, feature_name: str, valst: list, start: str, end: str, val: str, val2: str, val3: str, val4: str, titleval: str, tagval: str, endcon: str, button_value: str):
 
         try:
             files = nts.CreateDocuments(
                 feature=feature_name, val_lst=valst, end_con=endcon)
             
             data = files.get_documents(start=start, end=end, val=val, val2=val2,
-                            val3=val3, val4=val4, title_val=titleval, tag_val=tagval)
+                            val3=val3, val4=val4, title_val=titleval, tag_val=tagval, button_val=button_value)
             return data
            
         except Exception as e:
@@ -86,7 +86,8 @@ class NewsScraperApp:
             val4='article_schedule',
             val='clearfix',
             val2='content_wrapper',
-            val3='p'
+            val3='p',
+            button_value='READ MORE'
         )
 
         return data
