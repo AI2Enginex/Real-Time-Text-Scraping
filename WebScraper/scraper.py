@@ -6,7 +6,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+import os
 
+web_driver = os.getenv("CHROME_DRIVER_VERSION")
 
 '''Web Scraping using Selenium python we will use Google Chrome web browser for scraping the text from the website'''
 
@@ -19,7 +21,7 @@ class WebScraping:
         
         # declearing the variable for chrome web driver
 
-        self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager("138.0.7204.184").install()))
+        self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager(web_driver).install()))
         self.driver.get(link)
     
     # function to release the 
@@ -58,7 +60,7 @@ class ExtractText:
     def __init__(self,link: str):
         
         # declearing the driver variable
-        self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager("138.0.7204.184").install()))
+        self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager(web_driver).install()))
         self.driver.get(link)
 
     
