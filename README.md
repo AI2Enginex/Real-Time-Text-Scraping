@@ -465,25 +465,10 @@ Sentiment + confidence
 - Some publishers may block automated requests or restrict scraping. Always respect the target website's terms, robots policies, and applicable laws.
 - Financial sentiment predictions are model outputs and should not be treated as investment advice.
 
-## Future Improvements
 
-Potential improvements include:
-
-- Replace hard-coded MongoDB configuration with a configurable connection URI.
-- Add a `requirements.txt` or `pyproject.toml` for reproducible environments.
-- Add structured logging instead of `print()` statements.
-- Introduce retry handling and timeout strategies for failed pages.
-- Add database indexes for faster link lookup and duplicate prevention.
-- Make scraping selectors configurable per website.
-- Add tests for scraper, database, and sentiment components.
-- Add Docker support for MongoDB and the application.
-- Introduce scheduled/automated scraping jobs.
-- Add richer market-data analytics and connect news sentiment with price movements.
 
 ## Disclaimer
 
 This project is intended for educational, research, and engineering purposes. Web scraping should be performed responsibly and in accordance with the terms and policies of the websites being accessed. Financial sentiment outputs are for analysis only and do not constitute financial or investment advice.
 
-## License
 
-No license file is currently present in the repository. Add a license before distributing or reusing the project under explicit open-source terms.
