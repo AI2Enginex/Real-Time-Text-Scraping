@@ -58,19 +58,67 @@ class MongoDBManagerClass:
             print("Data successfully inserted into the collection.")
         except Exception as e:
             print(f"Error while inserting data: {e}")
+    
+    # function for reading documents from the collection
+    def read_documnets_from_collection(self):
+
+        try:
+            # Fetch documents based on the query
+            documents = list(self.collection.find())
+            return documents
+        except Exception as e:
+            print(f"Error while reading documents: {e}")
+
 
     # function for reading collection data as dataframe
     def read_collection_as_df(self):
 
         try:
             # Fetch all documents from the collection
-            documents = list(self.collection.find())
+            documents = list(self.collection.find({}, {"_id": 0}))
             # Convert to DataFrame
             df = pd.DataFrame(documents)
             return df
         except Exception as e:
             return e
 
+
+class DataFrameManager(MongoDBManagerClass):
+
+    def __init__(self, db_name=None, collection_name=None):
+        super().__init__(db_name=db_name, collection_name=collection_name)
+
+    def read_collection_as_df(self):
+        try:
+            # Fetch all documents from the collection
+            documents = list(self.collection.find({}, {"_id": 0}))
+            # Convert to DataFrame
+            df = pd.DataFrame(documents)
+            return df
+        except Exception as e:
+            print(f"Error while reading collection as DataFrame: {e}")
+
+    def filter_dataframe_contains(self, column_name: str, value: str):
+        """Return collection rows where a column contains a string."""
+        df = self.read_collection_as_df()
+
+        if not isinstance(df, pd.DataFrame):
+            return df
+        if column_name not in df.columns:
+            raise KeyError(f"Column '{column_name}' does not exist in the dataframe.")
+        if not isinstance(value, str):
+            raise TypeError("The filter value must be a string.")
+
+        return df[df[column_name].astype("string").str.contains(
+            value,
+            case=False,
+            na=False,
+            regex=False,
+        )]
+
+    
 if __name__ == '__main__':
 
-    pass
+    df=DataFrameManager(db_name='Vibhor', collection_name='moneycontrol_news')
+    dataframe=df.filter_dataframe_contains(column_name='date_time', value='March 23, 2026')
+    print(dataframe.columns)

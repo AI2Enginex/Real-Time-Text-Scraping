@@ -1,5 +1,5 @@
 from MongoDBManager.pymongo_conn import MongoDBManagerClass
-import ScrapeData.scraping_data as nts
+import Utils.scraping_data as nts
 import os 
 
 from dotenv import load_dotenv
