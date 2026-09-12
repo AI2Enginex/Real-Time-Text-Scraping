@@ -17,6 +17,7 @@ class FinBERTSentiment():
 
     def __init__(self, model_name="ahmedrachid/FinancialBERT-Sentiment-Analysis", labels=3, allow_mismatch=True,label=None):
 
+        # Load the FinBERT model and tokenizer. The model is set to evaluation mode to disable dropout and other training-specific layers.
         self.model = BertForSequenceClassification.from_pretrained(
             model_name,
             num_labels=labels,
@@ -25,6 +26,7 @@ class FinBERTSentiment():
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.model.eval()
 
+    # Batch the documents for processing. Creates an iterator that yields batches of documents of a specified size.
     @staticmethod
     def batch_documents(documents, batch_size=2):
         while True:
@@ -33,6 +35,7 @@ class FinBERTSentiment():
                 return
             yield batch
 
+    # Clean the text by fixing encoding issues, replacing bad characters, removing URLs and special characters, and normalizing whitespace.
     @staticmethod
     def clean_text(text: str):
         try:
@@ -74,6 +77,8 @@ class FinBERTSentiment():
             print(f"Text cleaning failed: {e}")
             return text
 
+    # Predict sentiment for a list of texts. Tokenizes the texts, runs them through the model,
+    #  and returns the predicted sentiment labels and confidence scores.
     def predict_texts(self, texts, max_length: int = 512, batch_size: int = 2):
         """Return a sentiment label and confidence score for each text."""
         predictions = []
@@ -103,6 +108,7 @@ class FinBERTSentiment():
 
         return predictions
 
+    # Analyze news in a MongoDB collection in batches, predict sentiment, and upsert results into another collection.
     def analyze_moneycontrol_news(
         self,
         db_name: str,
@@ -113,6 +119,8 @@ class FinBERTSentiment():
         model_batch_size: int = 2,
     ):
         """Analyze news in collection batches and upsert results into MongoDB."""
+
+        # Initialize MongoDB connections for source and target collections.
         source_db = MongoDBManagerClass(
             db_name=db_name,
             collection_name=source_collection
@@ -122,8 +130,11 @@ class FinBERTSentiment():
             collection_name=target_collection
         )
 
-        processed = 0
+        processed = 0 # Count of processed documents
         try:
+
+            # Get already processed source_ids and legacy keys to avoid reprocessing.
+            # This ensures that documents already analyzed are not processed again, preventing duplicates in the target collection.
             processed_source_ids = {
                 document["source_id"]
                 for document in target_db.collection.find(
@@ -131,6 +142,8 @@ class FinBERTSentiment():
                     {"_id": 0, "source_id": 1}
                 )
             }
+
+            # Get legacy keys (title, date_time, text) for documents without source_id to avoid duplicates.
             processed_legacy_keys = {
                 (
                     document.get("title", ""),
@@ -142,6 +155,8 @@ class FinBERTSentiment():
                     {"_id": 0, "title": 1, "date_time": 1, "text": 1}
                 )
             }
+
+            # Fetch documents from the source collection that have a text field of type string.
             documents = source_db.collection.find(
                 {"text": {"$exists": True, "$type": "string"}},
                 {"_id": 1, "title": 1, "date_time": 1, "text": 1}
@@ -157,6 +172,7 @@ class FinBERTSentiment():
                 ) not in processed_legacy_keys
             )
 
+            # Process the new documents in batches, predict sentiment, and upsert results into the target collection.
             for source_batch in self.batch_documents(new_documents, collection_batch_size):
                 predictions = self.predict_texts(
                     [document["text"] for document in source_batch],
